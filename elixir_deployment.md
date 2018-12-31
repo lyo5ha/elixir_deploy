@@ -1,23 +1,33 @@
 
 # Table of Contents
 
-1.  [Настраиваем фаервол](#orga4c0c4b)
-2.  [Добавляем пользователя для деплоя](#orgf4feb5c)
-3.  [Устанавливаем NGNIX](#org39f9d22)
-    1.  [Установка, запуск Ngnix](#orgb9f39f7)
-    2.  [Конфигурация Ngnix](#org2deeb2d)
-4.  [SSL-сертификат](#org2ff9486)
-5.  [Postgresql](#org216a9fe)
-6.  [Установка elixir, erlang и node.js](#orgd13ef7b)
-    1.  [Mенеджер версий asdf](#org5db991b)
-    2.  [Установка Эрланга](#org07e43e7)
-    3.  [Установка Эликсира](#orge42eac4)
-    4.  [Установка Node.js](#org222e197)
+1.  [Настраиваем фаервол](#orgd2a6ed9)
+2.  [Добавляем пользователя для деплоя](#orge2c3d8d)
+3.  [Устанавливаем NGNIX](#org8e1c00d)
+    1.  [Установка, запуск Ngnix](#orgb94c4d5)
+    2.  [Конфигурация Ngnix](#org06ee954)
+4.  [SSL-сертификат](#org75043fe)
+5.  [Postgresql](#orgb4df33e)
+6.  [Установка elixir, erlang и node.js](#orgb4ffd01)
+    1.  [Mенеджер версий asdf](#org4372562)
+    2.  [Установка Эрланга](#orgc4055ec)
+    3.  [Установка Эликсира](#org7503f8a)
+    4.  [Установка Node.js](#org5fecd1d)
+7.  [Конфигурация проекта](#orgbb02378)
+    1.  [config/prod.exs](#org5d079fd)
+    2.  [Хранение prod.secret.exs](#orge0825b5)
+    3.  [Distillery, Edeliver](#org7956a70)
+        1.  [Добавляем в зависимости в `mix.exs`](#orgf4cf069)
+        2.  [Создаем релиз(конфиг edeliver)](#orgcf4a14c)
+8.  [Управление релизами](#org5173e73)
+    1.  [Ngnix и reverse proxy](#org950a2bc)
+    2.  [Деплой, администрирование релизов](#orgf5074b3)
+        1.  [Команды деплоя](#orgface1a9)
+        2.  [Компилирование ассетов при деплое](#org546192c)
+    3.  [.edeliver/config - финальный вид](#orga3e6e54)
 
-Англоязыйчый гайд - <https://www.digitalocean.com/community/tutorials/how-to-automate-elixir-phoenix-deployment-with-distillery-and-edeliver-on-ubuntu-16-04>
 
-
-<a id="orga4c0c4b"></a>
+<a id="orgd2a6ed9"></a>
 
 # Настраиваем фаервол
 
@@ -53,7 +63,7 @@
     sudo ufw allow 4000
 
 
-<a id="orgf4feb5c"></a>
+<a id="orge2c3d8d"></a>
 
 # Добавляем пользователя для деплоя
 
@@ -76,13 +86,21 @@
 
 -   зайти в новом терминале `ssh deploy@<ip-адрес сервера>`
 
+Нам необходимо будет заходить таким образом: `ssh <домен.com>`,
+для этого добавить в `~/.ssh/config` на локальной машине:
 
-<a id="org39f9d22"></a>
+    Host example.com 
+        HostName example.com
+        User deploy
+        IdentityFile ~/.ssh/<файл_с_ключом>
+
+
+<a id="org8e1c00d"></a>
 
 # Устанавливаем NGNIX
 
 
-<a id="orgb9f39f7"></a>
+<a id="orgb94c4d5"></a>
 
 ## Установка, запуск Ngnix
 
@@ -144,13 +162,20 @@ Ngnix автозапускается при перезагрузке серве�
     sudo systemctl reload nginx
 
 
-<a id="org2deeb2d"></a>
+<a id="org06ee954"></a>
 
 ## Конфигурация Ngnix
 
 Делаем отдельный новый серверный блок для приложения.
 Дефолтный старый серверный блок будет отдавать 404 страницы,
 если страница не найдена в приложении.
+
+Подразумевается, что у нас будет работать только <domen<sub>name.com</sub>>.
+Если надо, чтобы работал и <www.domen<sub>name.com</sub>>, то:
+
+-   надо добавить CNAME настройку в DNS-настройках сервера,
+    что-то типа `CNAME www.rbk.pay.amarkets.net  is an alias of rbk.pay.amarkets.net`
+-   вставить <www.domen<sub>name.com</sub>> в строчку конфигурации ngnix `server_name` через пробел, без запятых.
 
     
     sudo mkdir -p /var/www/rbk.pay.amarkets.net/html
@@ -160,6 +185,16 @@ Ngnix автозапускается при перезагрузке серве�
     # отредактировать home-страницу для нового блока
     
     vim /var/www/rbk.pay.amarkets.net/html/index.html
+    
+    # добавить что-то типа:
+    <html>
+       <head>
+           <title>Welcome to Example.com!</title>
+       </head>
+       <body>
+           <h1>Success!  The example.com server block is working!</h1>
+       </body>
+     </html>
     
     # завести новый конфиг-файл для нового блока
     
@@ -215,8 +250,10 @@ Ngnix автозапускается при перезагрузке серве�
 По адресу веб-адресу сервера должна быть надпись:
 `Success! The rbk.pay.amarkets.net server block is working!`
 
+Дальнейшая (обязательная) конфигурация nginx и файервола в разделе "Управление релизами"
 
-<a id="org2ff9486"></a>
+
+<a id="org75043fe"></a>
 
 # SSL-сертификат
 
@@ -235,9 +272,14 @@ Ngnix автозапускается при перезагрузке серве�
 
     
     sudo certbot --nginx -d rbk.pay.amarkets.net
+    
+    # если нужен еще и <www.domen_name.com>, то команда выглядит так
+    sudo certbot --nginx -d rbk.pay.amarkets.net -d www.rbk.pay.amarkets.net
+    
+    # будет ошибка, если <www.domen_name.com> не настроен, как alias в CNAME - поле настройки DNS.
 
 
-<a id="org216a9fe"></a>
+<a id="orgb4df33e"></a>
 
 # Postgresql
 
@@ -276,7 +318,7 @@ Ngnix автозапускается при перезагрузке серве�
     postgres=# grant all privileges on database <database_name> to <user_name>;
 
 
-<a id="orgd13ef7b"></a>
+<a id="orgb4ffd01"></a>
 
 # Установка elixir, erlang и node.js
 
@@ -285,7 +327,7 @@ Ngnix автозапускается при перезагрузке серве�
 под другим юзером, эрланга и эликсира не будет.
 
 
-<a id="org5db991b"></a>
+<a id="org4372562"></a>
 
 ## Mенеджер версий asdf
 
@@ -305,7 +347,7 @@ Ngnix автозапускается при перезагрузке серве�
     asdf plugin-add elixir
 
 
-<a id="org07e43e7"></a>
+<a id="orgc4055ec"></a>
 
 ## Установка Эрланга
 
@@ -334,7 +376,7 @@ Ngnix автозапускается при перезагрузке серве�
     asdf local erlang 21.1.1
 
 
-<a id="orge42eac4"></a>
+<a id="org7503f8a"></a>
 
 ## Установка Эликсира
 
@@ -370,9 +412,12 @@ Ngnix автозапускается при перезагрузке серве�
     
     elixir         1.7.4    (set by \/home\/ubuntu\/.tool-versions)
     erlang         21.1.1   (set by \/home\/ubuntu\/.tool-versions)
+    
+    # ставим hex
+    mix local.hex
 
 
-<a id="org222e197"></a>
+<a id="org5fecd1d"></a>
 
 ## Установка Node.js
 
@@ -396,4 +441,367 @@ Ngnix автозапускается при перезагрузке серве�
 
     
     asdf install nodejs 10.4.0
+    asdf global nodejs 10.4.0
+
+
+<a id="orgbb02378"></a>
+
+# Конфигурация проекта
+
+
+<a id="org5d079fd"></a>
+
+## config/prod.exs
+
+    
+    # config/prod.exs дефолтный
+    ...
+       config :myproject, MyprojectWeb.Endpoint,
+         load_from_system_env: true,
+         url: [host: "example.com", port: 80],
+         cache_static_manifest: "priv/static/cache_manifest.json"
+    ...
+    
+    # config/prod.exs изменить на это
+    ...
+      config :myproject, MyprojectWeb.Endpoint,
+        http: [port: 4000],
+        url: [host: "example.com", port: 80],
+        cache_static_manifest: "priv/static/manifest.json",
+        server: true,
+        code_reloader: false
+    ...
+
+
+<a id="orge0825b5"></a>
+
+## Хранение prod.secret.exs
+
+Зайти на сервер под `deploy` и создать в корне
+домашней папки место, куда будем копировать продовский конфиг
+
+    
+    # на сервере
+    cd ~
+    mkdir app_config
+    
+    # защищенно копируем c помощью scp (эту команду запустить локально, не на сервере)
+    scp ~/myproject/config/prod.secret.exs example.com:/home/deploy/app_config/prod.secret.exs
+
+
+<a id="org7956a70"></a>
+
+## Distillery, Edeliver
+
+
+<a id="orgf4cf069"></a>
+
+### Добавляем в зависимости в `mix.exs`
+
+    
+    def application, do: [
+      applications: [
+      ...
+       # Add edeliver to the END of the list
+       extra_applications: [:logger, :runtime_tools, :timex, :httpoison, :edeliver]
+       ]
+    ]
+    
+    defp deps do
+    [
+     ...
+     {:edeliver, ">= 1.6.0"},
+     {:distillery, ">= 2.0.3", warn_missing: false},
+     ]
+    end
+
+`mix deps.get`
+
+
+<a id="orgcf4a14c"></a>
+
+### Создаем релиз(конфиг edeliver)
+
+    
+    mix release.init
+    
+    # Output
+    An example config file has been placed in rel/config.exs, review it,
+    make edits as needed/desired, and then run `mix release` to build the release
+
+Создать папку `.deliver/` в корне проекта и создать в ней файл `config`
+с содержанием:
+
+    
+    APP="rbk_payment"
+    
+    BUILD_HOST="rbk.pay.amarkets.net"
+    BUILD_USER="deploy"
+    BUILD_AT="/home/deploy/app_build"
+    
+    PRODUCTION_HOSTS="rbk.pay.amarkets.net"
+    PRODUCTION_USER="deploy" 
+    DELIVER_TO="/home/deploy/app_release" 
+
+Для того, чтобы подтягивались секреты из prod.secret.exs, добавить в
+`.deliver/config` следующее:
+
+    
+    pre_erlang_get_and_update_deps() {
+      local _prod_secret_path="/home/deploy/app_config/prod.secret.exs"
+      if [ "$TARGET_MIX_ENV" = "prod" ]; then
+        __sync_remote "
+          ln -sfn '$_prod_secret_path' '$BUILD_AT/config/prod.secret.exs'
+        "
+      fi
+    }
+
+-   Добавить в `.gitignore` `.deliver/releases`
+-   Закоммитить все перед постройкой релиза (edeliver берет код из гита, поэтому все должно быть
+
+закоммичено).
+
+-   На сервере добавить в `/.profile` последней строчкой(в начале точка с пробелом):
+
+    . /home/deploy/.asdf/asdf.sh
+
+-   Проапдэйтить локали на сервере: `sudo update-locale LC_ALL=en_US.UTF-8`
+
+ИИииии, если все было сделано правильно и сегодня хороший день, запускаем 
+на локальной машине не дыша с обязательным указанием ветки, из которой деплоим:
+(если не указать, edeliver возьмет тупо `master`)
+
+    $ mix edeliver build release --branch=feature/deploy
+    
+    # output
+    
+    BUILDING RELEASE OF PS_RBK APP ON BUILD HOST
+    
+    -----> Authorizing hosts
+    -----> Ensuring hosts are ready to accept git pushes
+    -----> Pushing new commits with git to: deploy@rbk.pay.amarkets.net
+    -----> Resetting remote hosts to f968a62cfd6a0aff14cae3a5a7de4b36d8e5a8ea
+    -----> Cleaning generated files from last build
+    -----> Fetching / Updating dependencies
+    -----> Compiling sources
+    -----> Generating release
+    -----> Copying release 0.1.0 to local release store
+    -----> Copying ps_rbk.tar.gz to release store
+    
+    RELEASE BUILD OF PS_RBK WAS SUCCESSFUL!
+
+Если ошибки, во первых проверьте, что указанный хэш коммита
+соответствует вашей ветке и в коммите есть все конфиги, которые тут
+обсуждались.
+
+
+<a id="org5173e73"></a>
+
+# Управление релизами
+
+
+<a id="org950a2bc"></a>
+
+## Ngnix и reverse proxy
+
+После того, как запустили приложение,
+оно должно быть доступно по адресу
+<http://http://rbk.pay.amarkets.net:4000>
+
+У нас сделан тестовый эндпоинт, по которому 
+<http://rbk.pay.amarkets.net:4000/ping> возвращает
+`200, ok`
+
+Редактируем серверный блок
+
+    $ sudo vim /etc/nginx/sites-available/rbk.pay.amarkets.net
+
+Добавляем в самом начале файла перед первым `server`:
+
+    upstream phoenix {
+         server 127.0.0.1:4000;
+    }
+
+Поменять `location`:
+
+    location / {
+                allow all;
+    
+                # Proxy Headers
+                proxy_http_version 1.1;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header Host $http_host;
+                proxy_set_header X-Cluster-Client-Ip $remote_addr;
+    
+                # WebSockets
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection "upgrade";
+    
+                proxy_pass http://phoenix;
+        }
+
+Дальше:
+
+    $ sudo nginx -t
+    $ sudo systemctl restart nginx
+    $ sudo ufw delete allow 4000
+    $ sudo ufw status
+    
+    # output
+    
+    Status: active
+    
+    To                         Action      From
+    --                         ------      ----
+    OpenSSH                    ALLOW       Anywhere
+    Nginx Full                 ALLOW       Anywhere
+    OpenSSH (v6)               ALLOW       Anywhere (v6)
+    Nginx Full (v6)            ALLOW       Anywhere (v6)
+
+Теперь приложение доступно по `https`
+
+
+<a id="orgf5074b3"></a>
+
+## Деплой, администрирование релизов
+
+Что нужно установить и сделать, чтобы релизить на уже подготовленную
+машину?
+
+-   Нужно установить на локальную машину `asdf`, Erlang, Elixir, Nodejs как описано для сервера,
+    на мак ставится все так же (без `brew`). Ноду можно через брю, главное, чтобы версии совпадали.
+-   Использовать ветку, предназначенную для деплоя, в которой будут конфиги edeliver-a и distillery.
+-   Настроить SSH-доступ к серверу, нужно, чтобы можно можно было заходить под пользователем `deploy`
+    следующим образом - `ssh <домен.com>`, для этого:
+    
+    -   скопировать свой ключ на сервер в `~/.ssh/authorized_keys` (попросить того, у кого уже есть доступ)
+    -   локально добавить в `.ssh/config`:
+    
+        Host <домен.com>
+            HostName <домен.com>
+            User deploy
+            IdentityFile ~/.ssh/private_key_file
+
+
+<a id="orgface1a9"></a>
+
+### Команды деплоя
+
+    # билд релиза
+    $ mix edeliver build release --branch=feature/deploy
+    
+    # деплой
+    $ mix edeliver deploy release to production
+    
+    # старт сервера
+    $ mix edeliver start production
+    
+    $ mix edeliver ping production # shows which nodes are up and running
+    $ mix edeliver version production # shows the release version running on the nodes
+    $ mix edeliver show migrations on production # shows pending database migrations
+    $ mix edeliver migrate production # run database migrations
+    $ mix edeliver restart production # or start or stop
+
+Новый релиз взамен старого c остановкой прода:
+
+-   билдим `$ mix edeliver build release --branch=feature/deploy`
+-   останавливаем на проде: `$ mix edeliver start production`
+-   деплоим `$ mix edeliver deploy release to production`
+-   запускаем на проде `$ mix edeliver start production`
+-   запускаем миграции (накатываются на работающее приложение без проблем). `$ mix edeliver migrate production`
+
+По умолчанию запускается самый новый релиз.
+
+
+<a id="org546192c"></a>
+
+### Компилирование ассетов при деплое
+
+Добавить в `.deliver/config`
+
+    # for compiling assets
+    
+    pre_erlang_clean_compile() {
+    status "Running npm install"
+        __sync_remote "
+          [ -f ~/.profile ] && source ~/.profile
+          set -e
+          cd '$BUILD_AT'/assets
+          npm install
+        "
+    
+    status "Compiling assets"
+        __sync_remote "
+          [ -f ~/.profile ] && source ~/.profile
+          set -e
+          cd '$BUILD_AT'/assets
+          node_modules/.bin/webpack --mode production --silent
+        "
+    
+    status "Running phoenix.digest"
+        __sync_remote "
+          [ -f ~/.profile ] && source ~/.profile 
+          set -e 
+          cd '$BUILD_AT'
+          mkdir -p priv/static
+          APP='$APP' MIX_ENV='$TARGET_MIX_ENV' $MIX_CMD phx.digest $SILENCE
+        "
+     }
+
+
+<a id="orga3e6e54"></a>
+
+## .edeliver/config - финальный вид
+
+    APP="ps_rbk"
+    
+    BUILD_HOST="rbk.pay.amarkets.net"
+    BUILD_USER="deploy"
+    BUILD_AT="/home/deploy/app_build"
+    
+    PRODUCTION_HOSTS="rbk.pay.amarkets.net"
+    PRODUCTION_USER="deploy" 
+    DELIVER_TO="/home/deploy/app_release" 
+    
+    AUTO_VERSION=git-branch+git-revision+build-date+build-time
+    
+    # for implementing prod.secret.exs in prod server
+    
+    pre_erlang_get_and_update_deps() {
+      local _prod_secret_path="/home/deploy/app_config/prod.secret.exs"
+      if [ "$TARGET_MIX_ENV" = "prod" ]; then
+        __sync_remote "
+          ln -sfn '$_prod_secret_path' '$BUILD_AT/config/prod.secret.exs'
+        "
+      fi
+    }
+    
+    # for compiling assets
+    
+    pre_erlang_clean_compile() {
+    status "Running npm install"
+        __sync_remote "
+          [ -f ~/.profile ] && source ~/.profile
+          set -e
+          cd '$BUILD_AT'/assets
+          npm install
+        "
+    
+    status "Compiling assets"
+        __sync_remote "
+          [ -f ~/.profile ] && source ~/.profile
+          set -e
+          cd '$BUILD_AT'/assets
+          node_modules/.bin/webpack --mode production --silent
+        "
+    
+    status "Running phoenix.digest"
+        __sync_remote "
+          [ -f ~/.profile ] && source ~/.profile 
+          set -e 
+          cd '$BUILD_AT'
+          mkdir -p priv/static
+          APP='$APP' MIX_ENV='$TARGET_MIX_ENV' $MIX_CMD phx.digest $SILENCE
+        "
+     }
 
