@@ -144,93 +144,93 @@
    #+END_EXAMPLE
 
 ** Конфигурация Ngnix
-   Делаем отдельный новый серверный блок для приложения.
-   Дефолтный старый серверный блок будет отдавать 404 страницы,
-   если страница не найдена в приложении.
 
-   Подразумевается, что у нас будет работать только <domen_name.com>.
-   Если надо, чтобы работал и <www.domen_name.com>, то:
-   - надо добавить CNAME настройку в DNS-настройках сервера,
-     что-то типа ~CNAME www.rbk.pay.amarkets.net  is an alias of rbk.pay.amarkets.net~
-   - вставить <www.domen_name.com> в строчку конфигурации ngnix ~server_name~ через пробел, без запятых.
+ #+BEGIN_EXAMPLE
 
-   #+BEGIN_EXAMPLE
+ $ sudo mkdir -p /var/www/rbk.pay.amarkets.net/html
+ $ sudo chown -R $USER:$USER /var/www/rbk.pay.amarkets.net/html
+ $ sudo chmod -R 755 /var/www/rbk.pay.amarkets.net
 
-   sudo mkdir -p /var/www/rbk.pay.amarkets.net/html
-   sudo chown -R $USER:$USER /var/www/rbk.pay.amarkets.net/html
-   sudo chmod -R 755 /var/www/rbk.pay.amarkets.net
+ # отредактировать home-страницу для нового блока
 
-   # отредактировать home-страницу для нового блока
+ $ vim /var/www/rbk.pay.amarkets.net/html/index.html
 
-   vim /var/www/rbk.pay.amarkets.net/html/index.html
+ # добавить что-то типа:
+ <html>
+   <head>
+     <title>Welcome to Example.com!</title>
+ </head>
+ <body>
+ <h1>Success!  The example.com server block is working!</h1>
+     </body>
+ </html>
 
-   # добавить что-то типа:
-   <html>
-      <head>
-          <title>Welcome to Example.com!</title>
-      </head>
-      <body>
-          <h1>Success!  The example.com server block is working!</h1>
-      </body>
-    </html>
+# завести новый конфиг-файл для нового блока
 
-   # завести новый конфиг-файл для нового блока
+$ sudo vim /etc/nginx/sites-available/rbk.pay.amarkets.net
 
-   sudo vim /etc/nginx/sites-available/rbk.pay.amarkets.net
+# новая конфигурация (вставить)
 
-   # новая конфигурация (вставить)
+server {
+      listen 80;
+      listen [::]:80;
 
-   server {
-           listen 80;
-           listen [::]:80;
+      root /var/www/rbk.pay.amarkets.net/html;
+      index index.html index.htm index.nginx-debian.html;
 
-           root /var/www/rbk.pay.amarkets.net/html;
-           index index.html index.htm index.nginx-debian.html;
+      server_name rbk.pay.amarkets.net;
 
-           server_name rbk.pay.amarkets.net;
+      location / {
+                  try_files $uri $uri/ =404;
+      }
+}
 
-           location / {
-                       try_files $uri $uri/ =404;
-           }
-   }
 
-   # подключить новый конфиг (пробел после .net)
+#+END_EXAMPLE
 
-   sudo ln -s /etc/nginx/sites-available/rbk.pay.amarkets.net /etc/nginx/sites-enabled/
+ #+BEGIN_EXAMPLE
+# подключить новый конфиг (пробел после .net)
 
-   # подправить кофиг
+$ sudo ln -s /etc/nginx/sites-available/rbk.pay.amarkets.net /etc/nginx/sites-enabled/
 
-   sudo vim /etc/nginx/nginx.conf
+# подправить кофиг
 
-   # раскомментить строчку:
+$ sudo vim /etc/nginx/nginx.conf
 
-   ...
-   http {
-   ...
-         server_names_hash_bucket_size 64;
-   ...
-   }
-   ...
+# раскомментить строчку:
 
-   # проверить, что конфигурация без ошибок:
+...
+http {
+...
+    server_names_hash_bucket_size 64;
+...
+}
+...
 
-   sudo nginx -t
+# проверить, что конфигурация без ошибок:
 
-   # output:
+$ sudo nginx -t
 
-   nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
-   nginx: configuration file /etc/nginx/nginx.conf test is successful
+# output:
 
-   # перезапустить nginx:
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
 
-   sudo systemctl restart nginx
-   
-   #+END_EXAMPLE
+# перезапустить nginx:
 
-   По адресу веб-адресу сервера должна быть надпись:
-   ~Success! The rbk.pay.amarkets.net server block is working!~
+$ sudo systemctl restart nginx
+#+END_EXAMPLE
 
-   Дальнейшая (обязательная) конфигурация nginx и файервола в разделе "Управление релизами"
+Подразумевается, что у нас будет работать только ~<domen_name.com>~.
+Если надо, чтобы работал и ~<www.domen_name.com>~, то:
+надо добавить CNAME настройку в DNS-настройках сервера,
+что-то типа ~CNAME www.rbk.pay.amarkets.net  is an alias of rbk.pay.amarkets.net~
+вставить ~<www.domen_name.com>~ в строчку конфигурации ngnix ~server_name~ через пробел, без запятых.
+
+По адресу веб-адресу сервера должна быть надпись:
+~Success! The rbk.pay.amarkets.net server block is working!~
+
+Дальнейшая (обязательная) конфигурация nginx и файервола в разделе "Управление релизами"
 
 
 * SSL-сертификат
