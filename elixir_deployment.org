@@ -6,18 +6,18 @@
 
    #+BEGIN_EXAMPLE
 
-   sudo ufw app list
+   $ sudo ufw app list
 
    # output:
 
    Available applications:
    OpenSSH
 
-   sudo ufw allow OpenSSH
+   $ sudo ufw allow OpenSSH
 
-   sudo ufw enable
+   $ sudo ufw enable
 
-   sudo ufw status
+   $ sudo ufw status
 
    # output:
 
@@ -30,7 +30,7 @@
 
    # добавить порт для Феникса
 
-   sudo ufw allow 4000
+   $ sudo ufw allow 4000
 
    #+END_EXAMPLE
 
@@ -40,8 +40,8 @@
 
    #+BEGIN_EXAMPLE
 
-   adduser deploy
-   sudo usermod -a -G sudo deploy
+   $ adduser deploy
+   $ sudo usermod -a -G sudo deploy
 
    #+END_EXAMPLE
 
@@ -53,7 +53,7 @@
 
    #+BEGIN_EXAMPLE
 
-   sudo rsync --archive --chown=deploy:deploy ~/.ssh /home/deploy
+   $ sudo rsync --archive --chown=deploy:deploy ~/.ssh /home/deploy
 
    #+END_EXAMPLE
 
@@ -77,8 +77,8 @@
 
    #+BEGIN_EXAMPLE
 
-    sudo apt update
-    sudo apt install nginx
+    $ sudo apt update
+    $ sudo apt install nginx
 
    #+END_EXAMPLE
 
@@ -87,8 +87,8 @@
 
    #+BEGIN_EXAMPLE
 
-   sudo ufw allow 'Nginx HTTP'
-   sudo ufw status
+   $ sudo ufw allow 'Nginx HTTP'
+   $ sudo ufw status
 
    # output:
 
@@ -110,7 +110,7 @@
 
    #+BEGIN_EXAMPLE
 
-   systemctl status nginx
+   $ systemctl status nginx
 
    # output:
 
@@ -133,13 +133,13 @@
 
    #+BEGIN_EXAMPLE
 
-   sudo systemctl stop nginx
-   sudo systemctl start nginx
-   sudo systemctl restart nginx
+   $ sudo systemctl stop nginx
+   $ sudo systemctl start nginx
+   $ sudo systemctl restart nginx
 
    # при изменеиии конфигов перезапускать не обязательно:
 
-   sudo systemctl reload nginx
+   $ sudo systemctl reload nginx
    
    #+END_EXAMPLE
 
@@ -237,9 +237,9 @@ $ sudo systemctl restart nginx
   
    #+BEGIN_EXAMPLE
 
-   sudo add-apt-repository ppa:certbot/certbot
-   sudo apt-get update
-   sudo apt-get install python-certbot-nginx
+   $ sudo add-apt-repository ppa:certbot/certbot
+   $ sudo apt-get update
+   $ sudo apt-get install python-certbot-nginx
 
    #+END_EXAMPLE
 
@@ -247,8 +247,8 @@ $ sudo systemctl restart nginx
 
    #+BEGIN_EXAMPLE
 
-   sudo ufw allow 'Nginx Full'
-   sudo ufw delete allow 'Nginx HTTP'
+   $ sudo ufw allow 'Nginx Full'
+   $ sudo ufw delete allow 'Nginx HTTP'
 
    #+END_EXAMPLE
 
@@ -256,10 +256,10 @@ $ sudo systemctl restart nginx
 
    #+BEGIN_EXAMPLE
 
-   sudo certbot --nginx -d rbk.pay.amarkets.net
+   $ sudo certbot --nginx -d rbk.pay.amarkets.net
 
    # если нужен еще и <www.domen_name.com>, то команда выглядит так
-   sudo certbot --nginx -d rbk.pay.amarkets.net -d www.rbk.pay.amarkets.net
+   $ sudo certbot --nginx -d rbk.pay.amarkets.net -d www.rbk.pay.amarkets.net
 
    # будет ошибка, если <www.domen_name.com> не настроен, как alias в CNAME - поле настройки DNS.
    
@@ -272,15 +272,15 @@ $ sudo systemctl restart nginx
   
    #+BEGIN_EXAMPLE
 
-   sudo apt update
-   sudo apt install postgresql postgresql-contrib
+   $ sudo apt update
+   $ sudo apt install postgresql postgresql-contrib
 
    # создать юзера с таким же именем, как и юзер, под
    # которым зашли на сервер (deploy).
-   sudo -u postgres createuser --interactive
+   $ sudo -u postgres createuser --interactive
 
    # сделать одноименную базу
-   sudo -u postgres createdb deploy
+   $ sudo -u postgres createdb deploy
 
    # и тогда можно заходить в консоль постгреса просто:
    psql
@@ -321,10 +321,10 @@ $ sudo systemctl restart nginx
 
    #+BEGIN_EXAMPLE
 
-   git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.6.2
+   $ git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.6.2
 
-   echo -e '\n. $HOME/.asdf/asdf.sh' >> ~/.bashrc
-   echo -e '\n. $HOME/.asdf/completions/asdf.bash' >> ~/.bashrc
+   $ echo -e '\n. $HOME/.asdf/asdf.sh' >> ~/.bashrc
+   $ echo -e '\n. $HOME/.asdf/completions/asdf.bash' >> ~/.bashrc
 
    #+END_EXAMPLE
 
@@ -332,8 +332,9 @@ $ sudo systemctl restart nginx
 
    #+BEGIN_EXAMPLE
 
-   asdf plugin-add erlang
-   asdf plugin-add elixir
+   $ asdf plugin-add erlang
+   $ asdf plugin-add elixir
+   $ asdf plugin-add nodejs
 
    #+END_EXAMPLE
 
@@ -341,7 +342,7 @@ $ sudo systemctl restart nginx
 
    #+BEGIN_EXAMPLE
 
-   asdf install erlang 21.1.1
+   $ asdf install erlang 21.1.1
 
    #+END_EXAMPLE
 
@@ -352,7 +353,7 @@ $ sudo systemctl restart nginx
 
    #+BEGIN_EXAMPLE
 
-   sudo apt-get update && sudo apt-get install libssl-dev
+   $ sudo apt-get update && sudo apt-get install libssl-dev
 
    #+END_EXAMPLE
 
@@ -378,7 +379,7 @@ $ sudo systemctl restart nginx
 
    #+BEGIN_EXAMPLE
 
-   asdf install elixir 1.7.4
+   $ asdf install elixir 1.7.4
 
    #+END_EXAMPLE
 
@@ -386,7 +387,7 @@ $ sudo systemctl restart nginx
 
    #+BEGIN_EXAMPLE
 
-   asdf list
+   $ asdf list
 
    # output:
 
@@ -418,7 +419,7 @@ $ sudo systemctl restart nginx
    erlang         21.1.1   (set by \/home\/ubuntu\/.tool-versions)
 
    # ставим hex
-   mix local.hex
+   $ mix local.hex
 
    #+END_EXAMPLE
 
@@ -426,7 +427,7 @@ $ sudo systemctl restart nginx
    
    #+BEGIN_EXAMPLE
 
-   asdf plugin-add nodejs
+   $ asdf plugin-add nodejs
 
    #+END_EXAMPLE
 
@@ -442,7 +443,7 @@ $ sudo systemctl restart nginx
 
    #+BEGIN_EXAMPLE
 
-   gpg --keyserver ipv4.pool.sks-keyservers.net --recv-keys C4F0DFFF4E8C1A8236409D08E73BC641CC11F4C8
+   $ gpg --keyserver ipv4.pool.sks-keyservers.net --recv-keys C4F0DFFF4E8C1A8236409D08E73BC641CC11F4C8
 
    #+END_EXAMPLE
    
@@ -450,8 +451,8 @@ $ sudo systemctl restart nginx
 
    #+BEGIN_EXAMPLE
 
-   asdf install nodejs 10.4.0
-   asdf global nodejs 10.4.0
+   $ asdf install nodejs 10.4.0
+   $ asdf global nodejs 10.4.0
 
    #+END_EXAMPLE
    
@@ -488,7 +489,7 @@ $ sudo systemctl restart nginx
 
    # на сервере
    cd ~
-   mkdir app_config
+   $ mkdir app_config
 
    # защищенно копируем c помощью scp (эту команду запустить локально, не на сервере)
    scp ~/myproject/config/prod.secret.exs example.com:/home/deploy/app_config/prod.secret.exs
@@ -610,7 +611,7 @@ $ sudo systemctl restart nginx
 ** Ngnix и reverse proxy
    После того, как запустили приложение,
    оно должно быть доступно по адресу
-   http://http://rbk.pay.amarkets.net:4000
+   http://rbk.pay.amarkets.net:4000
    
    У нас сделан тестовый эндпоинт, по которому 
    http://rbk.pay.amarkets.net:4000/ping возвращает
@@ -688,16 +689,68 @@ $ sudo systemctl restart nginx
          User deploy
          IdentityFile ~/.ssh/private_key_file
      #+END_EXAMPLE
+ 
 *** Команды деплоя 
      #+BEGIN_EXAMPLE
      # билд релиза
      $ mix edeliver build release --branch=feature/deploy
+     (проверить хэш коммита, чтобы точно вы сбилдили то, что хотели)
+
+     #output
+     BUILDING RELEASE OF PS_RBK APP ON BUILD HOST
+
+     -----> Authorizing hosts
+     -----> Ensuring hosts are ready to accept git pushes
+     -----> Pushing new commits with git to: deploy@rbk.pay.amarkets.net
+     -----> Resetting remote hosts to 405f7ba77b5a4fb2bb3f5fd6b3f3f13c72caea34 # <----- вот он хэш коммита
+     -----> Cleaning generated files from last build
+     -----> Fetching / Updating dependencies
+     -----> Running npm install
+     -----> Compiling assets
+     -----> Running phoenix.digest
+     -----> Compiling sources
+     -----> Generating release
+     -----> Copying release 0.1.0+deploywebhook-405f7ba-20190109-123942 to local release store
+     -----> Copying ps_rbk.tar.gz to release store
+
+     RELEASE BUILD OF PS_RBK WAS SUCCESSFUL!
+
+     # остановка сервера на проде
+     $ mix edeliver stop production
 
      # деплой
      $ mix edeliver deploy release to production
+     (выбрать копипастой нужный релиз из списка)
 
      # старт сервера
      $ mix edeliver start production
+     (из-за багов edeliver у многих есть эти ошибки, но сервер запускается,
+     главное, чтобы в конце было написано  START DONE!)
+     
+     #output
+
+     EDELIVER PS_RBK WITH START COMMAND
+
+     -----> starting production servers
+
+     production node:
+
+     user    : deploy
+     host    : rbk.pay.amarkets.net
+     path    : /home/deploy/app_release
+     response: ▸  Received 'pang' from ps_rbk@127.0.0.1!
+     ▸  Possible reasons for this include:
+     ▸    - The cookie is mismatched between us and the target node
+     ▸    - We cannot establish a remote connection to the node
+     ▸  Received 'pang' from ps_rbk@127.0.0.1!
+     ▸  Possible reasons for this include:
+     ▸    - The cookie is mismatched between us and the target node
+     ▸    - We cannot establish a remote connection to the node
+     
+     
+     START DONE!
+
+
 
      $ mix edeliver ping production # shows which nodes are up and running
      $ mix edeliver version production # shows the release version running on the nodes
@@ -708,11 +761,31 @@ $ sudo systemctl restart nginx
 
      Новый релиз взамен старого c остановкой прода:
      - билдим ~$ mix edeliver build release --branch=feature/deploy~
-     - останавливаем на проде: ~$ mix edeliver start production~
+     - останавливаем на проде: ~$ mix edeliver stop production~
      - деплоим ~$ mix edeliver deploy release to production~
      - запускаем на проде ~$ mix edeliver start production~
      - запускаем миграции (накатываются на работающее приложение без проблем). ~$ mix edeliver migrate production~
      По умолчанию запускается самый новый релиз.
+
+     
+
+*** Логи
+    Логи находятся в ~app_release/<название_приложения>/var/logs~
+
+     #+BEGIN_EXAMPLE
+     .
+     ├── erlang.log.1
+     ├── erlang.log.3
+     ├── erlang.log.4
+     ├── erlang.log.5
+     └── run_erl.log
+     #+END_EXAMPLE
+    
+     При деплое и новом запуске (перезапуске) приложения, если нет файлов в этой директории,
+     создается новый файл. Если есть путаница, куда пишутся логи (или не пишутся), 
+     лучше удалить все файлы отсюда и перезапустить приложение. Останется ~erlang.log.1~, в 
+     который точно будут писаться логи. (рецепт не для прода).
+
 
 *** Компилирование ассетов при деплое
 
@@ -805,3 +878,17 @@ status "Running phoenix.digest"
     "
  }
      #+END_EXAMPLE
+
+* Возможные проблемы
+  При релизе возникает такая ошибка:
+  
+    #+BEGIN_EXAMPLE
+    'erlang-build-release' strategy does not exist
+
+    edeliver v1.4.5 | https://github.com/boldpoker/edeliver
+
+    Available strategies:
+    #+END_EXAMPLE
+
+    Это баг (очередной) edeliver-a, нужно проверить локальный путь к папке приложения
+    на отсутствие пробелов. Типа ~../My projects/payment_systems~, так вот, убрать пробелы надо.

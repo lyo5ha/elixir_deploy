@@ -1,33 +1,35 @@
 
 # Table of Contents
 
-1.  [Настраиваем фаервол](#orgd0b9898)
-2.  [Добавляем пользователя для деплоя](#org27901ce)
-3.  [Устанавливаем NGNIX](#orgfae2d3f)
-    1.  [Установка, запуск Ngnix](#org26d2bc4)
-    2.  [Конфигурация Ngnix](#org5826586)
-4.  [SSL-сертификат](#org1560ef2)
-5.  [Postgresql](#org2f2ba59)
-6.  [Установка elixir, erlang и node.js](#orga49a808)
-    1.  [Mенеджер версий asdf](#orga4592b3)
-    2.  [Установка Эрланга](#orgc3deddb)
-    3.  [Установка Эликсира](#org52843b4)
-    4.  [Установка Node.js](#org4e44401)
-7.  [Конфигурация проекта](#orge2babf4)
-    1.  [config/prod.exs](#orgb63f6f8)
-    2.  [Хранение prod.secret.exs](#org8c2eb73)
-    3.  [Distillery, Edeliver](#org0fb2216)
-        1.  [Добавляем в зависимости в `mix.exs`](#org2057055)
-        2.  [Создаем релиз(конфиг edeliver)](#orgaaf7621)
-8.  [Управление релизами](#orge60b300)
-    1.  [Ngnix и reverse proxy](#org3fe0d12)
-    2.  [Деплой, администрирование релизов](#orgfb83e13)
-        1.  [Команды деплоя](#org303e367)
-        2.  [Компилирование ассетов при деплое](#org8dc07b6)
-    3.  [.edeliver/config - финальный вид](#orgd5a28d7)
+1.  [Настраиваем фаервол](#org76ef55a)
+2.  [Добавляем пользователя для деплоя](#orge4d9155)
+3.  [Устанавливаем NGNIX](#org0bafadc)
+    1.  [Установка, запуск Ngnix](#org5c18c50)
+    2.  [Конфигурация Ngnix](#org9671d79)
+4.  [SSL-сертификат](#orgfeb88f8)
+5.  [Postgresql](#org2a090fa)
+6.  [Установка elixir, erlang и node.js](#org0ea63b8)
+    1.  [Mенеджер версий asdf](#org5843370)
+    2.  [Установка Эрланга](#org846bc83)
+    3.  [Установка Эликсира](#org4b73d12)
+    4.  [Установка Node.js](#orgf1d20cb)
+7.  [Конфигурация проекта](#org43bbacc)
+    1.  [config/prod.exs](#org43b3cc6)
+    2.  [Хранение prod.secret.exs](#orgda796d8)
+    3.  [Distillery, Edeliver](#org50597e4)
+        1.  [Добавляем в зависимости в `mix.exs`](#org7737b1b)
+        2.  [Создаем релиз(конфиг edeliver)](#orgb2ad85f)
+8.  [Управление релизами](#org5eab61c)
+    1.  [Ngnix и reverse proxy](#org2d20e2a)
+    2.  [Деплой, администрирование релизов](#org2613c6b)
+        1.  [Команды деплоя](#orga1fa803)
+        2.  [Логи](#orge955312)
+        3.  [Компилирование ассетов при деплое](#orge576074)
+    3.  [.edeliver/config - финальный вид](#org2e39329)
+9.  [Возможные проблемы](#org2da379c)
 
 
-<a id="orgd0b9898"></a>
+<a id="org76ef55a"></a>
 
 # Настраиваем фаервол
 
@@ -36,18 +38,18 @@
 добавлен(уже лежит) в `/home/ubuntu/.ssh/authorized_keys`
 
     
-    sudo ufw app list
+    $ sudo ufw app list
     
     # output:
     
     Available applications:
     OpenSSH
     
-    sudo ufw allow OpenSSH
+    $ sudo ufw allow OpenSSH
     
-    sudo ufw enable
+    $ sudo ufw enable
     
-    sudo ufw status
+    $ sudo ufw status
     
     # output:
     
@@ -60,18 +62,18 @@
     
     # добавить порт для Феникса
     
-    sudo ufw allow 4000
+    $ sudo ufw allow 4000
 
 
-<a id="org27901ce"></a>
+<a id="orge4d9155"></a>
 
 # Добавляем пользователя для деплоя
 
 И даем ему права.
 
     
-    adduser deploy
-    sudo usermod -a -G sudo deploy
+    $ adduser deploy
+    $ sudo usermod -a -G sudo deploy
 
 Не забудьте пароль записать/запомнить.
 
@@ -80,7 +82,7 @@
 (внимательно с пробелами!)
 
     
-    sudo rsync --archive --chown=deploy:deploy ~/.ssh /home/deploy
+    $ sudo rsync --archive --chown=deploy:deploy ~/.ssh /home/deploy
 
 Проверить:
 
@@ -95,26 +97,26 @@
         IdentityFile ~/.ssh/<файл_с_ключом>
 
 
-<a id="orgfae2d3f"></a>
+<a id="org0bafadc"></a>
 
 # Устанавливаем NGNIX
 
 
-<a id="org26d2bc4"></a>
+<a id="org5c18c50"></a>
 
 ## Установка, запуск Ngnix
 
 Заходим на сервер через ssh под юзером `deploy`
 
     
-    sudo apt update
-    sudo apt install nginx
+    $ sudo apt update
+    $ sudo apt install nginx
 
 Апдэйтим файервол:
 
     
-    sudo ufw allow 'Nginx HTTP'
-    sudo ufw status
+    $ sudo ufw allow 'Nginx HTTP'
+    $ sudo ufw status
     
     # output:
     
@@ -133,7 +135,7 @@
 Проверить:
 
     
-    systemctl status nginx
+    $ systemctl status nginx
     
     # output:
     
@@ -153,16 +155,16 @@
 Ngnix автозапускается при перезагрузке сервера. Управление:
 
     
-    sudo systemctl stop nginx
-    sudo systemctl start nginx
-    sudo systemctl restart nginx
+    $ sudo systemctl stop nginx
+    $ sudo systemctl start nginx
+    $ sudo systemctl restart nginx
     
     # при изменеиии конфигов перезапускать не обязательно:
     
-    sudo systemctl reload nginx
+    $ sudo systemctl reload nginx
 
 
-<a id="org5826586"></a>
+<a id="org9671d79"></a>
 
 ## Конфигурация Ngnix
 
@@ -248,48 +250,48 @@ Ngnix автозапускается при перезагрузке серве�
 Дальнейшая (обязательная) конфигурация nginx и файервола в разделе "Управление релизами"
 
 
-<a id="org1560ef2"></a>
+<a id="orgfeb88f8"></a>
 
 # SSL-сертификат
 
     
-    sudo add-apt-repository ppa:certbot/certbot
-    sudo apt-get update
-    sudo apt-get install python-certbot-nginx
+    $ sudo add-apt-repository ppa:certbot/certbot
+    $ sudo apt-get update
+    $ sudo apt-get install python-certbot-nginx
 
 Апдэйт файервола:
 
     
-    sudo ufw allow 'Nginx Full'
-    sudo ufw delete allow 'Nginx HTTP'
+    $ sudo ufw allow 'Nginx Full'
+    $ sudo ufw delete allow 'Nginx HTTP'
 
 Получение сертификата
 
     
-    sudo certbot --nginx -d rbk.pay.amarkets.net
+    $ sudo certbot --nginx -d rbk.pay.amarkets.net
     
     # если нужен еще и <www.domen_name.com>, то команда выглядит так
-    sudo certbot --nginx -d rbk.pay.amarkets.net -d www.rbk.pay.amarkets.net
+    $ sudo certbot --nginx -d rbk.pay.amarkets.net -d www.rbk.pay.amarkets.net
     
     # будет ошибка, если <www.domen_name.com> не настроен, как alias в CNAME - поле настройки DNS.
 
 
-<a id="org2f2ba59"></a>
+<a id="org2a090fa"></a>
 
 # Postgresql
 
 Подробней - <https://www.digitalocean.com/community/tutorials/how-to-install-and-use-postgresql-on-ubuntu-18-04>
 
     
-    sudo apt update
-    sudo apt install postgresql postgresql-contrib
+    $ sudo apt update
+    $ sudo apt install postgresql postgresql-contrib
     
     # создать юзера с таким же именем, как и юзер, под
     # которым зашли на сервер (deploy).
-    sudo -u postgres createuser --interactive
+    $ sudo -u postgres createuser --interactive
     
     # сделать одноименную базу
-    sudo -u postgres createdb deploy
+    $ sudo -u postgres createdb deploy
     
     # и тогда можно заходить в консоль постгреса просто:
     psql
@@ -313,7 +315,7 @@ Ngnix автозапускается при перезагрузке серве�
     postgres=# grant all privileges on database <database_name> to <user_name>;
 
 
-<a id="orga49a808"></a>
+<a id="org0ea63b8"></a>
 
 # Установка elixir, erlang и node.js
 
@@ -322,7 +324,7 @@ Ngnix автозапускается при перезагрузке серве�
 под другим юзером, эрланга и эликсира не будет.
 
 
-<a id="orga4592b3"></a>
+<a id="org5843370"></a>
 
 ## Mенеджер версий asdf
 
@@ -330,24 +332,25 @@ Ngnix автозапускается при перезагрузке серве�
 <https://github.com/asdf-vm/asdf>
 
     
-    git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.6.2
+    $ git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.6.2
     
-    echo -e '\n. $HOME/.asdf/asdf.sh' >> ~/.bashrc
-    echo -e '\n. $HOME/.asdf/completions/asdf.bash' >> ~/.bashrc
+    $ echo -e '\n. $HOME/.asdf/asdf.sh' >> ~/.bashrc
+    $ echo -e '\n. $HOME/.asdf/completions/asdf.bash' >> ~/.bashrc
 
 Не забыть выйти и заново зайти на сервер (перезагрузать терминал).
 
     
-    asdf plugin-add erlang
-    asdf plugin-add elixir
+    $ asdf plugin-add erlang
+    $ asdf plugin-add elixir
+    $ asdf plugin-add nodejs
 
 
-<a id="orgc3deddb"></a>
+<a id="org846bc83"></a>
 
 ## Установка Эрланга
 
     
-    asdf install erlang 21.1.1
+    $ asdf install erlang 21.1.1
 
 Если в процессе установки есть ошибки такого вида:
 `WARNING: It appears that a required development package 'libssl-dev' is not installed.`
@@ -355,7 +358,7 @@ Ngnix автозапускается при перезагрузке серве�
 Установить недостающие библиотеки:
 
     
-    sudo apt-get update && sudo apt-get install libssl-dev
+    $ sudo apt-get update && sudo apt-get install libssl-dev
 
 И перезапустить `asdf install erlang 21.1.1`
 Эрланг компилируется довольно долго, ± 10 минут.
@@ -371,19 +374,19 @@ Ngnix автозапускается при перезагрузке серве�
     asdf local erlang 21.1.1
 
 
-<a id="org52843b4"></a>
+<a id="org4b73d12"></a>
 
 ## Установка Эликсира
 
 Уставливаем эликсир:
 
     
-    asdf install elixir 1.7.4
+    $ asdf install elixir 1.7.4
 
 Проверяем, что все установилось:
 
     
-    asdf list
+    $ asdf list
     
     # output:
     
@@ -409,15 +412,15 @@ Ngnix автозапускается при перезагрузке серве�
     erlang         21.1.1   (set by \/home\/ubuntu\/.tool-versions)
     
     # ставим hex
-    mix local.hex
+    $ mix local.hex
 
 
-<a id="org4e44401"></a>
+<a id="orgf1d20cb"></a>
 
 ## Установка Node.js
 
     
-    asdf plugin-add nodejs
+    $ asdf plugin-add nodejs
 
 Теперь немного жести.
 Необходимо вручную установить несколько gpg ключей, без которых
@@ -430,21 +433,21 @@ Ngnix автозапускается при перезагрузке серве�
 делать:
 
     
-    gpg --keyserver ipv4.pool.sks-keyservers.net --recv-keys C4F0DFFF4E8C1A8236409D08E73BC641CC11F4C8
+    $ gpg --keyserver ipv4.pool.sks-keyservers.net --recv-keys C4F0DFFF4E8C1A8236409D08E73BC641CC11F4C8
 
 Если это не помогло - таким же образом добавить все ключи отсюда - <https://github.com/asdf-vm/asdf-nodejs/commit/9237a7fa0fa70e3b7bfc64b1da49b15136ae2adf>
 
     
-    asdf install nodejs 10.4.0
-    asdf global nodejs 10.4.0
+    $ asdf install nodejs 10.4.0
+    $ asdf global nodejs 10.4.0
 
 
-<a id="orge2babf4"></a>
+<a id="org43bbacc"></a>
 
 # Конфигурация проекта
 
 
-<a id="orgb63f6f8"></a>
+<a id="org43b3cc6"></a>
 
 ## config/prod.exs
 
@@ -468,7 +471,7 @@ Ngnix автозапускается при перезагрузке серве�
     ...
 
 
-<a id="org8c2eb73"></a>
+<a id="orgda796d8"></a>
 
 ## Хранение prod.secret.exs
 
@@ -478,18 +481,18 @@ Ngnix автозапускается при перезагрузке серве�
     
     # на сервере
     cd ~
-    mkdir app_config
+    $ mkdir app_config
     
     # защищенно копируем c помощью scp (эту команду запустить локально, не на сервере)
     scp ~/myproject/config/prod.secret.exs example.com:/home/deploy/app_config/prod.secret.exs
 
 
-<a id="org0fb2216"></a>
+<a id="org50597e4"></a>
 
 ## Distillery, Edeliver
 
 
-<a id="org2057055"></a>
+<a id="org7737b1b"></a>
 
 ### Добавляем в зависимости в `mix.exs`
 
@@ -513,7 +516,7 @@ Ngnix автозапускается при перезагрузке серве�
 `mix deps.get`
 
 
-<a id="orgaaf7621"></a>
+<a id="orgb2ad85f"></a>
 
 ### Создаем релиз(конфиг edeliver)
 
@@ -590,18 +593,18 @@ Ngnix автозапускается при перезагрузке серве�
 обсуждались.
 
 
-<a id="orge60b300"></a>
+<a id="org5eab61c"></a>
 
 # Управление релизами
 
 
-<a id="org3fe0d12"></a>
+<a id="org2d20e2a"></a>
 
 ## Ngnix и reverse proxy
 
 После того, как запустили приложение,
 оно должно быть доступно по адресу
-<http://http://rbk.pay.amarkets.net:4000>
+<http://rbk.pay.amarkets.net:4000>
 
 У нас сделан тестовый эндпоинт, по которому 
 <http://rbk.pay.amarkets.net:4000/ping> возвращает
@@ -656,7 +659,7 @@ Ngnix автозапускается при перезагрузке серве�
 Теперь приложение доступно по `https`
 
 
-<a id="orgfb83e13"></a>
+<a id="org2613c6b"></a>
 
 ## Деплой, администрирование релизов
 
@@ -678,18 +681,69 @@ Ngnix автозапускается при перезагрузке серве�
             IdentityFile ~/.ssh/private_key_file
 
 
-<a id="org303e367"></a>
+<a id="orga1fa803"></a>
 
 ### Команды деплоя
 
     # билд релиза
     $ mix edeliver build release --branch=feature/deploy
+    (проверить хэш коммита, чтобы точно вы сбилдили то, что хотели)
+    
+    #output
+    BUILDING RELEASE OF PS_RBK APP ON BUILD HOST
+    
+    -----> Authorizing hosts
+    -----> Ensuring hosts are ready to accept git pushes
+    -----> Pushing new commits with git to: deploy@rbk.pay.amarkets.net
+    -----> Resetting remote hosts to 405f7ba77b5a4fb2bb3f5fd6b3f3f13c72caea34 # <----- вот он хэш коммита
+    -----> Cleaning generated files from last build
+    -----> Fetching / Updating dependencies
+    -----> Running npm install
+    -----> Compiling assets
+    -----> Running phoenix.digest
+    -----> Compiling sources
+    -----> Generating release
+    -----> Copying release 0.1.0+deploywebhook-405f7ba-20190109-123942 to local release store
+    -----> Copying ps_rbk.tar.gz to release store
+    
+    RELEASE BUILD OF PS_RBK WAS SUCCESSFUL!
+    
+    # остановка сервера на проде
+    $ mix edeliver stop production
     
     # деплой
     $ mix edeliver deploy release to production
+    (выбрать копипастой нужный релиз из списка)
     
     # старт сервера
     $ mix edeliver start production
+    (из-за багов edeliver у многих есть эти ошибки, но сервер запускается,
+    главное, чтобы в конце было написано  START DONE!)
+    
+    #output
+    
+    EDELIVER PS_RBK WITH START COMMAND
+    
+    -----> starting production servers
+    
+    production node:
+    
+    user    : deploy
+    host    : rbk.pay.amarkets.net
+    path    : /home/deploy/app_release
+    response: ▸  Received 'pang' from ps_rbk@127.0.0.1!
+    ▸  Possible reasons for this include:
+    ▸    - The cookie is mismatched between us and the target node
+    ▸    - We cannot establish a remote connection to the node
+    ▸  Received 'pang' from ps_rbk@127.0.0.1!
+    ▸  Possible reasons for this include:
+    ▸    - The cookie is mismatched between us and the target node
+    ▸    - We cannot establish a remote connection to the node
+    
+    
+    START DONE!
+    
+    
     
     $ mix edeliver ping production # shows which nodes are up and running
     $ mix edeliver version production # shows the release version running on the nodes
@@ -700,7 +754,7 @@ Ngnix автозапускается при перезагрузке серве�
 Новый релиз взамен старого c остановкой прода:
 
 -   билдим `$ mix edeliver build release --branch=feature/deploy`
--   останавливаем на проде: `$ mix edeliver start production`
+-   останавливаем на проде: `$ mix edeliver stop production`
 -   деплоим `$ mix edeliver deploy release to production`
 -   запускаем на проде `$ mix edeliver start production`
 -   запускаем миграции (накатываются на работающее приложение без проблем). `$ mix edeliver migrate production`
@@ -708,7 +762,26 @@ Ngnix автозапускается при перезагрузке серве�
 По умолчанию запускается самый новый релиз.
 
 
-<a id="org8dc07b6"></a>
+<a id="orge955312"></a>
+
+### Логи
+
+Логи находятся в `app_release/<название_приложения>/var/logs`
+
+    .
+    ├── erlang.log.1
+    ├── erlang.log.3
+    ├── erlang.log.4
+    ├── erlang.log.5
+    └── run_erl.log
+
+При деплое и новом запуске (перезапуске) приложения, если нет файлов в этой директории,
+создается новый файл. Если есть путаница, куда пишутся логи (или не пишутся), 
+лучше удалить все файлы отсюда и перезапустить приложение. Останется `erlang.log.1`, в 
+который точно будут писаться логи. (рецепт не для прода).
+
+
+<a id="orge576074"></a>
 
 ### Компилирование ассетов при деплое
 
@@ -744,7 +817,7 @@ Ngnix автозапускается при перезагрузке серве�
      }
 
 
-<a id="orgd5a28d7"></a>
+<a id="org2e39329"></a>
 
 ## .edeliver/config - финальный вид
 
@@ -799,4 +872,20 @@ Ngnix автозапускается при перезагрузке серве�
           APP='$APP' MIX_ENV='$TARGET_MIX_ENV' $MIX_CMD phx.digest $SILENCE
         "
      }
+
+
+<a id="org2da379c"></a>
+
+# Возможные проблемы
+
+При релизе возникает такая ошибка:
+
+    'erlang-build-release' strategy does not exist
+    
+    edeliver v1.4.5 | https://github.com/boldpoker/edeliver
+    
+    Available strategies:
+
+Это баг (очередной) edeliver-a, нужно проверить локальный путь к папке приложения
+на отсутствие пробелов. Типа `../My projects/payment_systems`, так вот, убрать пробелы надо.
 
