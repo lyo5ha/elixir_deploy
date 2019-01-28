@@ -456,6 +456,20 @@ $ sudo systemctl restart nginx
 
    #+END_EXAMPLE
    
+** Установка Phoenix
+   Возможны такие проблемы:
+   #+BEGIN_EXAMPLE
+   $ amarkets mix phx.new ps_vload
+   ** (Mix) The task "phx.new" could not be found
+   #+END_EXAMPLE
+
+   Тогда надо сделать такое:
+
+   #+BEGIN_EXAMPLE
+   $ mix archive.install hex phx_new
+   #+END_EXAMPLE
+
+   По умолчанию устанавливается последняя версия Феникса.
 
 * Конфигурация проекта
 ** config/prod.exs
