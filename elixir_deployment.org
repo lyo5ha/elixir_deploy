@@ -471,6 +471,7 @@ $ sudo systemctl restart nginx
 
    По умолчанию устанавливается последняя версия Феникса.
 
+
 * Конфигурация проекта
 ** config/prod.exs
    
@@ -506,7 +507,7 @@ $ sudo systemctl restart nginx
    $ mkdir app_config
 
    # защищенно копируем c помощью scp (эту команду запустить локально, не на сервере)
-   scp ~/myproject/config/prod.secret.exs example.com:/home/deploy/app_config/prod.secret.exs
+   $ scp ~/myproject/config/prod.secret.exs example.com:/home/deploy/app_config/prod.secret.exs
 
    #+END_EXAMPLE
 ** Distillery, Edeliver
@@ -893,6 +894,7 @@ status "Running phoenix.digest"
  }
      #+END_EXAMPLE
 
+
 * Возможные проблемы
   При релизе возникает такая ошибка:
   
@@ -906,3 +908,39 @@ status "Running phoenix.digest"
 
     Это баг (очередной) edeliver-a, нужно проверить локальный путь к папке приложения
     на отсутствие пробелов. Типа ~../My projects/payment_systems~, так вот, убрать пробелы надо.
+
+* Деплоим второе приложение на тот же сервер
+  Инструкция исходя из того, что есть уже задеплоенное приложение, см. все предидущие пункты.
+** Изменить конфиг еделивера.
+   #+BEGIN_EXAMPLE
+   # добавить еще один уровень вложенности в папку deploy
+    APP="ps_rbk"
+
+    BUILD_HOST="rbk.pay.amarkets.net"
+    BUILD_USER="deploy"
+    BUILD_AT="/home/deploy/ps_rbk/app_build"
+
+    PRODUCTION_HOSTS="rbk.pay.amarkets.net"
+    PRODUCTION_USER="deploy" 
+    DELIVER_TO="/home/deploy/ps_rbk/app_release" 
+
+    AUTO_VERSION=git-branch+git-revision+build-date+build-time
+
+    # for implementing prod.secret.exs in prod server
+
+    pre_erlang_get_and_update_deps() {
+      local _prod_secret_path="/home/deploy/ps_rbk/app_config/prod.secret.exs"
+      if [ "$TARGET_MIX_ENV" = "prod" ]; then
+        __sync_remote "
+          ln -sfn '$_prod_secret_path' '$BUILD_AT/config/prod.secret.exs'
+        "
+      fi
+    }
+    #+END_EXAMPLE
+** Конфигурация ngnix
+*** Создаем еще один серверный блок
+    Сделать файл для серверного блока нового приложения
+
+    #+BEGIN_EXAMPLE
+    # /etc/nginx/ 
+    #+END_EXAMPLE
