@@ -1,79 +1,155 @@
-* Настраиваем фаервол
-  Осторожно! Можно самому себе забокировать доступ на сервер!
-  Дальнейшее подразумевает, что вы зашли(уже зашли) по ssh ключу и он
-  добавлен(уже лежит) в ~/home/ubuntu/.ssh/authorized_keys~
-  
+* Установка elixir, erlang и node.js
+
+  Устанавливаем под юзером ~deploy~, которого создали ранее. 
+  ~ASDF~ будет работать только в папке этого юзера, т.е. если зайти
+  под другим юзером, эрланга и эликсира не будет.
+
+
+  При установке на локальной машине для разработки ставить ~локальные~ версии для
+  нужных папок проектов. (А не глобальные, как в примере. Глобальная версия
+  ставится т.к. иных на прод-серевере/стэйдже/билд-сервере не нужно.)
+
+** Mенеджер версий asdf
+   Аналог ~rbenv~  для эликсира/эрланга
+   https://github.com/asdf-vm/asdf
 
    #+BEGIN_EXAMPLE
 
-   $ sudo ufw app list
+   $ git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.6.2
 
-   # output:
+   $ echo -e '\n. $HOME/.asdf/asdf.sh' >> ~/.bashrc
+   $ echo -e '\n. $HOME/.asdf/completions/asdf.bash' >> ~/.bashrc
 
-   Available applications:
-   OpenSSH
+   #+END_EXAMPLE
 
-   $ sudo ufw allow OpenSSH
+   Не забыть выйти и заново зайти на сервер (перезагрузать терминал).
 
-   $ sudo ufw enable
+   #+BEGIN_EXAMPLE
 
-   $ sudo ufw status
+   $ asdf plugin-add erlang
+   $ asdf plugin-add elixir
+   $ asdf plugin-add nodejs
 
-   # output:
+   #+END_EXAMPLE
 
-   Status: active
+** Установка Эрланга
+
+   Устанавливаем необходимые библиотеки:
+
+   #+BEGIN_EXAMPLE
+   $ sudo apt install libssl-dev make automake autoconf libncurses5-dev gcc -y
+
+   #+END_EXAMPLE
    
-   To                         Action      From
-   --                         ------      ----
-   OpenSSH                    ALLOW       Anywhere
-   OpenSSH (v6)               ALLOW       Anywhere (v6)
-
-   # добавить порт для Феникса
-
-   $ sudo ufw allow 4000
-
-   #+END_EXAMPLE
-
-
-* Добавляем пользователя для деплоя
-  И даем ему права.
+   Устанавливаем Эрланг: 
 
    #+BEGIN_EXAMPLE
 
-   $ adduser deploy
-   $ sudo usermod -a -G sudo deploy
+   $ asdf install erlang 21.1.1
 
    #+END_EXAMPLE
 
-   Не забудьте пароль записать/запомнить.
-
-   Делаем возможность заходить под ~deploy~ через ssh
-   и копируем права.
-   (внимательно с пробелами!)
+   Эрланг компилируется довольно долго, ± 10 минут.
+   По завершению должно быть сообщение:
 
    #+BEGIN_EXAMPLE
 
-   $ sudo rsync --archive --chown=deploy:deploy ~/.ssh /home/deploy
+   Erlang 21.1.1 has been installed. Activate globally with:
+
+   asdf global erlang 21.1.1
+
+   Activate locally in the current folder with:
+
+   asdf local erlang 21.1.1
 
    #+END_EXAMPLE
 
-   Проверить:
-   - зайти в новом терминале ~ssh deploy@<ip-адрес сервера>~
+   Устанавливаем глобально:
    
-   Нам необходимо будет заходить таким образом: ~ssh <домен.com>~,
-   для этого добавить в ~~/.ssh/config~ на локальной машине:
-
    #+BEGIN_EXAMPLE
-   Host example.com 
-       HostName example.com
-       User deploy
-       IdentityFile ~/.ssh/<файл_с_ключом>
+
+   asdf glibal erlang 21.1.1
+
    #+END_EXAMPLE
 
+** Установка Эликсира
 
-* Устанавливаем NGNIX
+   Уставливаем эликсир:
+
+   #+BEGIN_EXAMPLE
+
+   $ asdf install elixir 1.7.4
+
+   #+END_EXAMPLE
+
+   Устанавливаем глобально:
+   
+   #+BEGIN_EXAMPLE
+
+   asdf glibal elixir 1.7.4
+
+   #+END_EXAMPLE
+
+   Ставим ~hex~ (для зависимостей в эликсие).
+   #+BEGIN_EXAMPLE
+   $ mix local.hex
+   #+END_EXAMPLE
+
+** Установка Node.js
+   
+   #+BEGIN_EXAMPLE
+
+   $ asdf plugin-add nodejs
+
+   #+END_EXAMPLE
+
+   Теперь немного жести.
+   Необходимо вручную установить несколько gpg ключей, без которых
+   нода не устанавливается через asdf. Текущая версия asdf - 0.6.2,
+   возможно в будущих версиях починят. (Вообще-то должны были смержить
+   изменения еще в июле 2018, но все-равно не работает).
+
+   вот я отписал в asdf issues - https://github.com/asdf-vm/asdf-nodejs/issues/82#issuecomment-449992361
+
+   делать:
+
+   #+BEGIN_EXAMPLE
+
+   $ gpg --keyserver ipv4.pool.sks-keyservers.net --recv-keys C4F0DFFF4E8C1A8236409D08E73BC641CC11F4C8
+
+   #+END_EXAMPLE
+   
+   Если это не помогло - таким же образом добавить все ключи отсюда - https://github.com/asdf-vm/asdf-nodejs/commit/9237a7fa0fa70e3b7bfc64b1da49b15136ae2adf
+
+   #+BEGIN_EXAMPLE
+
+   $ asdf install nodejs 10.4.0
+   $ asdf global nodejs 10.4.0
+
+   #+END_EXAMPLE
+   
+** Установка Phoenix (для разработки на локальной машине).
+
+   (На прод-сервер ставить не надо).
+
+   Возможны такие проблемы:
+   #+BEGIN_EXAMPLE
+   $ amarkets mix phx.new ps_vload
+   ** (Mix) The task "phx.new" could not be found
+   #+END_EXAMPLE
+
+   Тогда надо сделать такое:
+
+   #+BEGIN_EXAMPLE
+   $ mix archive.install hex phx_new
+   #+END_EXAMPLE
+
+   По умолчанию устанавливается последняя версия Феникса.
+
+
+* Устанавливаем NGNIX, конфигурация
 ** Установка, запуск Ngnix
-  Заходим на сервер через ssh под юзером ~deploy~
+  Заходим на сервер через ssh под юзером ~deploy~ (или любым другим).
 
    #+BEGIN_EXAMPLE
 
@@ -82,28 +158,6 @@
 
    #+END_EXAMPLE
 
-
-   Апдэйтим файервол:
-
-   #+BEGIN_EXAMPLE
-
-   $ sudo ufw allow 'Nginx HTTP'
-   $ sudo ufw status
-
-   # output:
-
-   Status: active
-
-   To                         Action      From
-   --                         ------      ----
-   OpenSSH                    ALLOW       Anywhere                  
-   4000                       ALLOW       Anywhere                  
-   Nginx HTTP                 ALLOW       Anywhere                  
-   OpenSSH (v6)               ALLOW       Anywhere (v6)             
-   4000 (v6)                  ALLOW       Anywhere (v6)             
-   Nginx HTTP (v6)            ALLOW       Anywhere (v6)        
-
-   #+END_EXAMPLE
 
    После установки nginx должен сам запуститься и работать.
    Проверить:
@@ -129,7 +183,9 @@
    Зайти по ip через браузер. (~http://your_server_ip~) Должа быть старничка ~Welcome to nginx!~
    Узнать ip можно: ~curl -4 icanhazip.com~
 
-   Ngnix автозапускается при перезагрузке сервера. Управление:
+   Ngnix автозапускается при перезагрузке сервера. 
+
+   Не обязательно: Управление:
 
    #+BEGIN_EXAMPLE
 
@@ -137,7 +193,7 @@
    $ sudo systemctl start nginx
    $ sudo systemctl restart nginx
 
-   # при изменеиии конфигов перезапускать не обязательно:
+   # при изменеиии конфигов перезапускать не обязательно, можно так:
 
    $ sudo systemctl reload nginx
    
@@ -147,53 +203,45 @@
 
  #+BEGIN_EXAMPLE
 
- $ sudo mkdir -p /var/www/rbk.pay.amarkets.net/html
- $ sudo chown -R $USER:$USER /var/www/rbk.pay.amarkets.net/html
- $ sudo chmod -R 755 /var/www/rbk.pay.amarkets.net
-
- # отредактировать home-страницу для нового блока
-
- $ vim /var/www/rbk.pay.amarkets.net/html/index.html
-
- # добавить что-то типа:
- <html>
-   <head>
-     <title>Welcome to Example.com!</title>
- </head>
- <body>
- <h1>Success!  The example.com server block is working!</h1>
-     </body>
- </html>
 
 # завести новый конфиг-файл для нового блока
 
-$ sudo vim /etc/nginx/sites-available/rbk.pay.amarkets.net
+$ sudo vim /etc/nginx/sites-available/<название_файла_=_доменное_имя>
 
 # новая конфигурация (вставить)
 
+upstream phoenix {
+     server 127.0.0.1:4000; # порт должен соответствовать настойкам приложения
+}
 server {
       listen 80;
       listen [::]:80;
 
-      root /var/www/rbk.pay.amarkets.net/html;
-      index index.html index.htm index.nginx-debian.html;
-
-      server_name rbk.pay.amarkets.net;
+      server_name <имя_сервера.com>;
 
       location / {
-                  try_files $uri $uri/ =404;
+                allow all;
+
+                # Proxy Headers
+                proxy_http_version 1.1;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header Host $http_host;
+                proxy_set_header X-Cluster-Client-Ip $remote_addr;
+
+                # WebSockets
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection "upgrade";
+
+                proxy_pass http://phoenix;
       }
 }
 
 
-#+END_EXAMPLE
-
- #+BEGIN_EXAMPLE
 # подключить новый конфиг (пробел после .net)
 
-$ sudo ln -s /etc/nginx/sites-available/rbk.pay.amarkets.net /etc/nginx/sites-enabled/
+$ sudo ln -s /etc/nginx/sites-available/<файл конфига> /etc/nginx/sites-enabled/
 
-# подправить кофиг
+# подправить общий кофиг
 
 $ sudo vim /etc/nginx/nginx.conf
 
@@ -221,17 +269,6 @@ nginx: configuration file /etc/nginx/nginx.conf test is successful
 $ sudo systemctl restart nginx
 #+END_EXAMPLE
 
-Подразумевается, что у нас будет работать только ~<domen_name.com>~.
-Если надо, чтобы работал и ~<www.domen_name.com>~, то:
-надо добавить CNAME настройку в DNS-настройках сервера,
-что-то типа ~CNAME www.rbk.pay.amarkets.net  is an alias of rbk.pay.amarkets.net~
-вставить ~<www.domen_name.com>~ в строчку конфигурации ngnix ~server_name~ через пробел, без запятых.
-
-По адресу веб-адресу сервера должна быть надпись:
-~Success! The rbk.pay.amarkets.net server block is working!~
-
-Дальнейшая (обязательная) конфигурация nginx и файервола в разделе "Управление релизами"
-
 
 * SSL-сертификат
   
@@ -256,7 +293,7 @@ $ sudo systemctl restart nginx
 
    #+BEGIN_EXAMPLE
 
-   $ sudo certbot --nginx -d rbk.pay.amarkets.net
+   $ sudo certbot --nginx -d <domen_name.com>
 
    # если нужен еще и <www.domen_name.com>, то команда выглядит так
    $ sudo certbot --nginx -d rbk.pay.amarkets.net -d www.rbk.pay.amarkets.net
@@ -271,7 +308,7 @@ $ sudo systemctl restart nginx
   Подробней - https://www.digitalocean.com/community/tutorials/how-to-install-and-use-postgresql-on-ubuntu-18-04
   
    #+BEGIN_EXAMPLE
-
+   
    $ sudo apt update
    $ sudo apt install postgresql postgresql-contrib
 
@@ -308,168 +345,6 @@ $ sudo systemctl restart nginx
 
    #+END_EXAMPLE
 
-
-* Установка elixir, erlang и node.js
-
-  Устанавливаем под юзером ~deploy~, которого создали ранее. 
-  ~ASDF~ будет работать только в папке этого юзера, т.е. если зайти
-  под другим юзером, эрланга и эликсира не будет.
-
-** Mенеджер версий asdf
-   Аналог ~rbenv~  для эликсира/эрланга
-   https://github.com/asdf-vm/asdf
-
-   #+BEGIN_EXAMPLE
-
-   $ git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.6.2
-
-   $ echo -e '\n. $HOME/.asdf/asdf.sh' >> ~/.bashrc
-   $ echo -e '\n. $HOME/.asdf/completions/asdf.bash' >> ~/.bashrc
-
-   #+END_EXAMPLE
-
-   Не забыть выйти и заново зайти на сервер (перезагрузать терминал).
-
-   #+BEGIN_EXAMPLE
-
-   $ asdf plugin-add erlang
-   $ asdf plugin-add elixir
-   $ asdf plugin-add nodejs
-
-   #+END_EXAMPLE
-
-** Установка Эрланга
-
-   #+BEGIN_EXAMPLE
-
-   $ asdf install erlang 21.1.1
-
-   #+END_EXAMPLE
-
-   Если в процессе установки есть ошибки такого вида:
-   ~WARNING: It appears that a required development package 'libssl-dev' is not installed.~
-
-   Установить недостающие библиотеки:
-
-   #+BEGIN_EXAMPLE
-
-   $ sudo apt-get update && sudo apt-get install libssl-dev
-
-   #+END_EXAMPLE
-
-   И перезапустить ~asdf install erlang 21.1.1~
-   Эрланг компилируется довольно долго, ± 10 минут.
-   По завершению должно быть сообщение:
-
-   #+BEGIN_EXAMPLE
-
-   Erlang 21.1.1 has been installed. Activate globally with:
-
-   asdf global erlang 21.1.1
-
-   Activate locally in the current folder with:
-
-   asdf local erlang 21.1.1
-
-   #+END_EXAMPLE
-
-** Установка Эликсира
-
-   Уставливаем эликсир:
-
-   #+BEGIN_EXAMPLE
-
-   $ asdf install elixir 1.7.4
-
-   #+END_EXAMPLE
-
-   Проверяем, что все установилось:
-
-   #+BEGIN_EXAMPLE
-
-   $ asdf list
-
-   # output:
-
-   elixir
-    1.7.4
-   erlang
-    21.1.1
-
-   #+END_EXAMPLE
-
-   Устанавливаем глобально:
-   
-   #+BEGIN_EXAMPLE
-
-   asdf glibal erlang 21.1.1
-   asdf global elixir 1.7.4
-
-   #+END_EXAMPLE
-
-   Проверяем:
-
-   #+BEGIN_EXAMPLE
-
-   asdf current
-
-   # output:
-
-   elixir         1.7.4    (set by \/home\/ubuntu\/.tool-versions)
-   erlang         21.1.1   (set by \/home\/ubuntu\/.tool-versions)
-
-   # ставим hex
-   $ mix local.hex
-
-   #+END_EXAMPLE
-
-** Установка Node.js
-   
-   #+BEGIN_EXAMPLE
-
-   $ asdf plugin-add nodejs
-
-   #+END_EXAMPLE
-
-   Теперь немного жести.
-   Необходимо вручную установить несколько gpg ключей, без которых
-   нода не устанавливается через asdf. Текущая версия asdf - 0.6.2,
-   возможно в будущих версиях починят. (Вообще-то должны были смержить
-   изменения еще в июле 2018, но все-равно не работает).
-
-   вот я отписал в asdf issues - https://github.com/asdf-vm/asdf-nodejs/issues/82#issuecomment-449992361
-
-   делать:
-
-   #+BEGIN_EXAMPLE
-
-   $ gpg --keyserver ipv4.pool.sks-keyservers.net --recv-keys C4F0DFFF4E8C1A8236409D08E73BC641CC11F4C8
-
-   #+END_EXAMPLE
-   
-   Если это не помогло - таким же образом добавить все ключи отсюда - https://github.com/asdf-vm/asdf-nodejs/commit/9237a7fa0fa70e3b7bfc64b1da49b15136ae2adf
-
-   #+BEGIN_EXAMPLE
-
-   $ asdf install nodejs 10.4.0
-   $ asdf global nodejs 10.4.0
-
-   #+END_EXAMPLE
-   
-** Установка Phoenix
-   Возможны такие проблемы:
-   #+BEGIN_EXAMPLE
-   $ amarkets mix phx.new ps_vload
-   ** (Mix) The task "phx.new" could not be found
-   #+END_EXAMPLE
-
-   Тогда надо сделать такое:
-
-   #+BEGIN_EXAMPLE
-   $ mix archive.install hex phx_new
-   #+END_EXAMPLE
-
-   По умолчанию устанавливается последняя версия Феникса.
 
 
 * Конфигурация проекта
@@ -510,6 +385,7 @@ $ sudo systemctl restart nginx
    $ scp ~/myproject/config/prod.secret.exs example.com:/home/deploy/app_config/prod.secret.exs
 
    #+END_EXAMPLE
+
 ** Distillery, Edeliver
 *** Добавляем в зависимости в ~mix.exs~
 
@@ -623,70 +499,6 @@ $ sudo systemctl restart nginx
     
 
 * Управление релизами
-** Ngnix и reverse proxy
-   После того, как запустили приложение,
-   оно должно быть доступно по адресу
-   http://rbk.pay.amarkets.net:4000
-   
-   У нас сделан тестовый эндпоинт, по которому 
-   http://rbk.pay.amarkets.net:4000/ping возвращает
-   ~200, ok~
-   
-   Редактируем серверный блок
-    #+BEGIN_EXAMPLE
-    $ sudo vim /etc/nginx/sites-available/rbk.pay.amarkets.net
-    #+END_EXAMPLE
-    
-    Добавляем в самом начале файла перед первым ~server~:
-    #+BEGIN_EXAMPLE
-    upstream phoenix {
-         server 127.0.0.1:4000;
-    }
-    #+END_EXAMPLE
-    
-    Поменять ~location~:
-
-    #+BEGIN_EXAMPLE
-    location / {
-                allow all;
-
-                # Proxy Headers
-                proxy_http_version 1.1;
-                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                proxy_set_header Host $http_host;
-                proxy_set_header X-Cluster-Client-Ip $remote_addr;
-
-                # WebSockets
-                proxy_set_header Upgrade $http_upgrade;
-                proxy_set_header Connection "upgrade";
-
-                proxy_pass http://phoenix;
-        }
-
-    #+END_EXAMPLE
-
-    Дальше:
-
-    #+BEGIN_EXAMPLE
-    $ sudo nginx -t
-    $ sudo systemctl restart nginx
-    $ sudo ufw delete allow 4000
-    $ sudo ufw status
-
-    # output
-
-    Status: active
-
-    To                         Action      From
-    --                         ------      ----
-    OpenSSH                    ALLOW       Anywhere
-    Nginx Full                 ALLOW       Anywhere
-    OpenSSH (v6)               ALLOW       Anywhere (v6)
-    Nginx Full (v6)            ALLOW       Anywhere (v6)
-    #+END_EXAMPLE
-
-    Теперь приложение доступно по ~https~
-    
 ** Деплой, администрирование релизов
    Что нужно установить и сделать, чтобы релизить на уже подготовленную
    машину?
@@ -908,6 +720,7 @@ status "Running phoenix.digest"
 
     Это баг (очередной) edeliver-a, нужно проверить локальный путь к папке приложения
     на отсутствие пробелов. Типа ~../My projects/payment_systems~, так вот, убрать пробелы надо.
+
 
 * Деплоим второе приложение на тот же сервер
   Инструкция исходя из того, что есть уже задеплоенное приложение, см. все предидущие пункты.
