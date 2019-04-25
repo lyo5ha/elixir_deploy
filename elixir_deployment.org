@@ -1,6 +1,6 @@
 * Установка elixir, erlang и node.js
 
-  Устанавливаем под юзером ~deploy~, которого создали ранее. 
+  Устанавливаем под юзером ~deploy~, которого создали ранее.
   ~ASDF~ будет работать только в папке этого юзера, т.е. если зайти
   под другим юзером, эрланга и эликсира не будет.
 
@@ -40,8 +40,8 @@
    $ sudo apt install libssl-dev make automake autoconf libncurses5-dev gcc -y
 
    #+END_EXAMPLE
-   
-   Устанавливаем Эрланг: 
+
+   Устанавливаем Эрланг:
 
    #+BEGIN_EXAMPLE
 
@@ -65,7 +65,7 @@
    #+END_EXAMPLE
 
    Устанавливаем глобально:
-   
+
    #+BEGIN_EXAMPLE
 
    asdf glibal erlang 21.1.1
@@ -83,7 +83,7 @@
    #+END_EXAMPLE
 
    Устанавливаем глобально:
-   
+
    #+BEGIN_EXAMPLE
 
    asdf glibal elixir 1.7.4
@@ -96,7 +96,7 @@
    #+END_EXAMPLE
 
 ** Установка Node.js
-   
+
    #+BEGIN_EXAMPLE
 
    $ asdf plugin-add nodejs
@@ -118,7 +118,7 @@
    $ gpg --keyserver ipv4.pool.sks-keyservers.net --recv-keys C4F0DFFF4E8C1A8236409D08E73BC641CC11F4C8
 
    #+END_EXAMPLE
-   
+
    Если это не помогло - таким же образом добавить все ключи отсюда - https://github.com/asdf-vm/asdf-nodejs/commit/9237a7fa0fa70e3b7bfc64b1da49b15136ae2adf
 
    #+BEGIN_EXAMPLE
@@ -127,7 +127,13 @@
    $ asdf global nodejs 10.4.0
 
    #+END_EXAMPLE
-   
+
+ Если уставливаем другие версии nodejs, то можно решить проблему ключей так:
+
+ asdf plugin-update nodejs
+ bash ~/.asdf/plugins/nodejs/bin/import-release-team-keyring
+ asdf install nodejs 11.14.0
+
 ** Установка Phoenix (для разработки на локальной машине).
 
    (На прод-сервер ставить не надо).
@@ -179,11 +185,11 @@
    └─2380 nginx: worker process
 
    #+END_EXAMPLE
-   
+
    Зайти по ip через браузер. (~http://your_server_ip~) Должа быть старничка ~Welcome to nginx!~
    Узнать ip можно: ~curl -4 icanhazip.com~
 
-   Ngnix автозапускается при перезагрузке сервера. 
+   Ngnix автозапускается при перезагрузке сервера.
 
    Не обязательно: Управление:
 
@@ -196,7 +202,7 @@
    # при изменеиии конфигов перезапускать не обязательно, можно так:
 
    $ sudo systemctl reload nginx
-   
+
    #+END_EXAMPLE
 
 ** Конфигурация Ngnix
@@ -239,6 +245,12 @@ server {
 
 # подключить новый конфиг (пробел после .net)
 
+# поставить максимальные права для файла конфига
+
+$ sudo chmod 777 /etc/nginx/sites-available/<файл конфига>
+
+# сделать симлинк
+
 $ sudo ln -s /etc/nginx/sites-available/<файл конфига> /etc/nginx/sites-enabled/
 
 # подправить общий кофиг
@@ -271,7 +283,7 @@ $ sudo systemctl restart nginx
 
 
 * SSL-сертификат
-  
+
    #+BEGIN_EXAMPLE
 
    $ sudo add-apt-repository ppa:certbot/certbot
@@ -290,16 +302,19 @@ $ sudo systemctl restart nginx
    $ sudo certbot --nginx -d rbk.pay.amarkets.net -d www.rbk.pay.amarkets.net
 
    # будет ошибка, если <www.domen_name.com> не настроен, как alias в CNAME - поле настройки DNS.
-   
+
+   # В диалоге выбирать второй выриант, 2: Redirect - Make all requests redirect to secure HTTPS access.
+
 
    #+END_EXAMPLE
 
 
+
 * Postgresql
   Подробней - https://www.digitalocean.com/community/tutorials/how-to-install-and-use-postgresql-on-ubuntu-18-04
-  
+
    #+BEGIN_EXAMPLE
-   
+
    $ sudo apt update
    $ sudo apt install postgresql postgresql-contrib
 
@@ -314,7 +329,7 @@ $ sudo systemctl restart nginx
    psql
 
    #+END_EXAMPLE
-   
+
    Это был юзер и база данных для администрирования и легкого
    попадания в консоль postgres.
    Создаем теперь юзеров и базы данных для приложения в консоли psql
@@ -340,7 +355,7 @@ $ sudo systemctl restart nginx
 
 * Конфигурация проекта
 ** config/prod.exs
-   
+
    #+BEGIN_EXAMPLE
 
 # config/prod.exs дефолтный
@@ -365,7 +380,7 @@ $ sudo systemctl restart nginx
 ** Хранение prod.secret.exs
    Зайти на сервер под ~deploy~ и создать в корне
    домашней папки место, куда будем копировать продовский конфиг
-   
+
    #+BEGIN_EXAMPLE
 
    # на сервере
@@ -401,9 +416,9 @@ $ sudo systemctl restart nginx
    #+END_EXAMPLE
 
    ~mix deps.get~
-    
+
 *** Создаем релиз(конфиг edeliver)
-    
+
    #+BEGIN_EXAMPLE
 
    mix release.init
@@ -426,8 +441,8 @@ $ sudo systemctl restart nginx
    BUILD_AT="/home/deploy/app_build"
 
    PRODUCTION_HOSTS="rbk.pay.amarkets.net"
-   PRODUCTION_USER="deploy" 
-   DELIVER_TO="/home/deploy/app_release" 
+   PRODUCTION_USER="deploy"
+   DELIVER_TO="/home/deploy/app_release"
 
    #+END_EXAMPLE
 
@@ -435,7 +450,7 @@ $ sudo systemctl restart nginx
    ~.deliver/config~ следующее:
 
    #+BEGIN_EXAMPLE
-   
+
    pre_erlang_get_and_update_deps() {
      local _prod_secret_path="/home/deploy/app_config/prod.secret.exs"
      if [ "$TARGET_MIX_ENV" = "prod" ]; then
@@ -456,15 +471,15 @@ $ sudo systemctl restart nginx
     #+END_EXAMPLE
 
     - Проапдэйтить локали на сервере: ~sudo update-locale LC_ALL=en_US.UTF-8~
-    
-    
-    ИИииии, если все было сделано правильно и сегодня хороший день, запускаем 
+
+
+    ИИииии, если все было сделано правильно и сегодня хороший день, запускаем
     на локальной машине не дыша с обязательным указанием ветки, из которой деплоим:
     (если не указать, edeliver возьмет тупо ~master~)
 
     #+BEGIN_EXAMPLE
     $ mix edeliver build release --branch=feature/deploy
-    
+
     # output
 
     BUILDING RELEASE OF PS_RBK APP ON BUILD HOST
@@ -479,15 +494,15 @@ $ sudo systemctl restart nginx
     -----> Generating release
     -----> Copying release 0.1.0 to local release store
     -----> Copying ps_rbk.tar.gz to release store
-    
+
     RELEASE BUILD OF PS_RBK WAS SUCCESSFUL!
 
     #+END_EXAMPLE
-    
+
     Если ошибки, во первых проверьте, что указанный хэш коммита
     соответствует вашей ветке и в коммите есть все конфиги, которые тут
     обсуждались.
-    
+
 
 * Управление релизами
 ** Деплой, администрирование релизов
@@ -507,8 +522,8 @@ $ sudo systemctl restart nginx
          User deploy
          IdentityFile ~/.ssh/private_key_file
      #+END_EXAMPLE
- 
-*** Команды деплоя 
+
+*** Команды деплоя
      #+BEGIN_EXAMPLE
      # билд релиза
      $ mix edeliver build release --branch=feature/deploy
@@ -544,7 +559,7 @@ $ sudo systemctl restart nginx
      $ mix edeliver start production
      (из-за багов edeliver у многих есть эти ошибки, но сервер запускается,
      главное, чтобы в конце было написано  START DONE!)
-     
+
      #output
 
      EDELIVER PS_RBK WITH START COMMAND
@@ -564,8 +579,8 @@ $ sudo systemctl restart nginx
      ▸  Possible reasons for this include:
      ▸    - The cookie is mismatched between us and the target node
      ▸    - We cannot establish a remote connection to the node
-     
-     
+
+
      START DONE!
 
 
@@ -585,7 +600,7 @@ $ sudo systemctl restart nginx
      - запускаем миграции (накатываются на работающее приложение без проблем). ~$ mix edeliver migrate production~
      По умолчанию запускается самый новый релиз.
 
-     
+
 
 *** Логи
     Логи находятся в ~app_release/<название_приложения>/var/logs~
@@ -598,17 +613,17 @@ $ sudo systemctl restart nginx
      ├── erlang.log.5
      └── run_erl.log
      #+END_EXAMPLE
-    
+
      При деплое и новом запуске (перезапуске) приложения, если нет файлов в этой директории,
-     создается новый файл. Если есть путаница, куда пишутся логи (или не пишутся), 
-     лучше удалить все файлы отсюда и перезапустить приложение. Останется ~erlang.log.1~, в 
+     создается новый файл. Если есть путаница, куда пишутся логи (или не пишутся),
+     лучше удалить все файлы отсюда и перезапустить приложение. Останется ~erlang.log.1~, в
      который точно будут писаться логи. (рецепт не для прода).
 
 
 *** Компилирование ассетов при деплое
 
 Добавить в ~.deliver/config~
-    
+
      #+BEGIN_EXAMPLE
 # for compiling assets
 
@@ -631,8 +646,8 @@ status "Compiling assets"
 
 status "Running phoenix.digest"
     __sync_remote "
-      [ -f ~/.profile ] && source ~/.profile 
-      set -e 
+      [ -f ~/.profile ] && source ~/.profile
+      set -e
       cd '$BUILD_AT'
       mkdir -p priv/static
       APP='$APP' MIX_ENV='$TARGET_MIX_ENV' $MIX_CMD phx.digest $SILENCE
@@ -651,8 +666,8 @@ BUILD_USER="deploy"
 BUILD_AT="/home/deploy/app_build"
 
 PRODUCTION_HOSTS="rbk.pay.amarkets.net"
-PRODUCTION_USER="deploy" 
-DELIVER_TO="/home/deploy/app_release" 
+PRODUCTION_USER="deploy"
+DELIVER_TO="/home/deploy/app_release"
 
 AUTO_VERSION=git-branch+git-revision+build-date+build-time
 
@@ -688,8 +703,8 @@ status "Compiling assets"
 
 status "Running phoenix.digest"
     __sync_remote "
-      [ -f ~/.profile ] && source ~/.profile 
-      set -e 
+      [ -f ~/.profile ] && source ~/.profile
+      set -e
       cd '$BUILD_AT'
       mkdir -p priv/static
       APP='$APP' MIX_ENV='$TARGET_MIX_ENV' $MIX_CMD phx.digest $SILENCE
@@ -700,7 +715,7 @@ status "Running phoenix.digest"
 
 * Возможные проблемы
   При релизе возникает такая ошибка:
-  
+
     #+BEGIN_EXAMPLE
     'erlang-build-release' strategy does not exist
 
@@ -712,3 +727,19 @@ status "Running phoenix.digest"
     Это баг (очередной) edeliver-a, нужно проверить локальный путь к папке приложения
     на отсутствие пробелов. Типа ~../My projects/payment_systems~, так вот, убрать пробелы надо.
 
+    #+BEGIN_EXAMPLE
+    using mix to generate release
+    (Mix) Could not invoke task "release": 1 error found!
+    --verbosity : Unknown option
+
+    Забыли сделать mix release.init
+
+
+    Oшибка:
+    fatal: not in a git directory
+
+    сделать в директории ~/app_build/~
+    #+END_EXAMPLE
+* Разное
+Проверить порты, на каком запущен серверер
+sudo netstat -ano -p tcp
